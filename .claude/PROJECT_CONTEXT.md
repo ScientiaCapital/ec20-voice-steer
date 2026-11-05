@@ -41,3 +41,28 @@ whether the existing VISCA preset path is enough without firmware work.
 - Is the debounce-drop behavior acceptable for two talkers trading short lines? (T2 back and forth rows)
 - Is Dante audio embedded in the EC20's HDMI and SDI outputs, or only in its network streams? (T5 step 4)
 - What does the array send exactly, and does its own hold or dwell setting replace the router's debounce? (T4)
+
+## Where to pick up (November 5, 2026)
+State: PR #1 brought the repo to the roomsync standard. The code, the tests and the docs are in place. Nothing has
+run against real hardware yet. Tim is setting up a Pearl Mini and an EC20 at home as the first bench.
+
+Start here, in order:
+1. Bench setup. Put the EC20, the Pearl Mini and a laptop on one network you control. Note the EC20 firmware
+   version from its web interface. Copy `.env.example` to `.env` and set `EC20_STEER_IP`. Never commit the address.
+2. T1 in `docs/test-plan.md`. Start with `uv run ec20-steer version`, then save and recall two presets, then step 6
+   with auto tracking on. Write results in the test plan without addresses or room names.
+3. T2, including the back and forth rows. Decide whether a debounced zone should be dropped (today) or recalled
+   when the debounce ends, and open an issue if it should change.
+4. T3. Add the EC20 to the Pearl Mini as an RTSP or NDI|HX source, record a 60-second run of T2, and share the clip
+   from Epiphan Edge.
+5. T5 needs a Dante source and a Pearl Nano. T4 needs a real ceiling array. Both wait on hardware.
+
+Before starting, read `AGENTS.md`. The short version: only the bench EC20 moves, every EC20 fact is cited from
+kb.epiphan.com, and no customer names or camera addresses go in the repo.
+
+Maintainer decisions (November 5, 2026):
+- History was rewritten so no commit names the customer or the consultant. GitHub still keeps PR #1's original
+  commits, where the names show as deleted lines. The repo is private, and that was accepted as is.
+- Main has no branch protection yet, because the free GitHub plan doesn't allow it on a private repo. Tim is moving
+  to GitHub Pro. After that, protect main: changes only through a PR, the Linux tests, lint and the secrets scan
+  must pass, and no force-push.

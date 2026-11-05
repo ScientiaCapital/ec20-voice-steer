@@ -25,6 +25,6 @@ part Edge can see.
 
 ## Now
 
-Proof of concept. `ec20-steer version | save | recall | home | route` exist and are tested only with a fake
-transport. Nothing has talked to a real EC20 yet. Next: run T1 in `docs/test-plan.md` on a bench EC20, then T2
-with the back and forth rows, then T5 (Dante audio to Pearl Nano).
+Proof of concept, code complete, no hardware run yet. `ec20-steer version | save | recall | home | route` exist and
+are tested only with a fake transport. The next person starts with "Where to pick up" in
+`.claude/PROJECT_CONTEXT.md`: bench setup, then T1, T2 and T3 in `docs/test-plan.md`.
