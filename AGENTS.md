@@ -72,6 +72,7 @@ uv run ec20-steer --help
 | `src/ec20_voice_steer/cli.py` | The `ec20-steer` command, with the key and mic stand-ins for the array |
 | `src/ec20_voice_steer/settings.py` | The camera address and timeout from `.env` |
 | `docs/test-plan.md` | The bench tests T1 to T5 and the open questions |
+| `.claude/agents/` | The bench team: runner, fact-checker, Edge observer, results scribe, rules reviewer (see `CLAUDE.md`) |
 | `.claude/hooks/` | Edge write guard and redaction (from the Edge Claude Kit), secrets hook |
 | `.claude/settings.json` | Permissions: reads allowed, writes ask, bypass mode off |
 | `tests/hook-test.sh`, `tests/redaction-cases.json` | Hook and permission tests; redaction cases shared with Fleetwatch |

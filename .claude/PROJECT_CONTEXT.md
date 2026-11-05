@@ -44,7 +44,9 @@ whether the existing VISCA preset path is enough without firmware work.
 
 ## Where to pick up (November 5, 2026)
 State: PR #1 brought the repo to the roomsync standard. The code, the tests and the docs are in place. Nothing has
-run against real hardware yet. Tim is setting up a Pearl Mini and an EC20 at home as the first bench.
+run against real hardware yet. Tim is setting up a Pearl Mini and an EC20 at home as the first bench. The bench team
+in `.claude/agents/` (runner, fact-checker, Edge observer, scribe, rules reviewer) is how a Claude Code session runs
+each test; the "Bench team" section of `CLAUDE.md` says how to start it.
 
 Start here, in order:
 1. Bench setup. Put the EC20, the Pearl Mini and a laptop on one network you control. Note the EC20 firmware
