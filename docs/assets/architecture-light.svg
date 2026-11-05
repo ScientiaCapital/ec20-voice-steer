@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="330" viewBox="0 0 880 330" role="img" aria-label="A ceiling microphone array, or a laptop standing in for it, sends a VISCA over IP preset recall to the EC20 on UDP 52381. Pearl Mini records the EC20 over NDI or RTSP and Epiphan Edge shares the clip. A bench test also sends Dante audio from the array into the EC20 and on to Pearl Nano over RTSP or SRT." font-family="Söhne,-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a4aaf"/></marker></defs>
+  <rect width="880" height="330" rx="16" fill="#f1f2f0"/>
+  <rect x="20" y="60" width="190" height="60" rx="8" fill="#ffffff" stroke="#c9ccd4"/>
+  <text x="115.0" y="84.0" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="600" fill="#111111">Ceiling mic array</text>
+  <text x="115.0" y="103.0" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#5a5a5a">or the laptop stand-in</text>
+  <path d="M210 90 L328 90" stroke="#4a4aaf" stroke-width="2" fill="none" marker-end="url(#head)"/>
+  <text x="269.0" y="81" text-anchor="middle" font-size="11" fill="#5a5a5a">VISCA over IP</text>
+  <text x="269" y="110" text-anchor="middle" font-size="11" fill="#5a5a5a">UDP 52381</text>
+  <rect x="330" y="60" width="160" height="60" rx="8" fill="#ffffff" stroke="#c9ccd4"/>
+  <text x="410.0" y="84.0" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="600" fill="#111111">EC20</text>
+  <text x="410.0" y="103.0" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#5a5a5a">recalls the zone preset</text>
+  <path d="M490 90 L568 90" stroke="#4a4aaf" stroke-width="2" fill="none" marker-end="url(#head)"/>
+  <text x="529.0" y="81" text-anchor="middle" font-size="11" fill="#5a5a5a">NDI or RTSP</text>
+  <rect x="570" y="60" width="130" height="60" rx="8" fill="#ffffff" stroke="#c9ccd4"/>
+  <text x="635.0" y="84.0" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="600" fill="#111111">Pearl Mini</text>
+  <text x="635.0" y="103.0" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#5a5a5a">records the shots</text>
+  <path d="M700 90 L738 90" stroke="#4a4aaf" stroke-width="2" fill="none" marker-end="url(#head)"/>
+  <rect x="740" y="60" width="120" height="60" rx="8" fill="#ffffff" stroke="#c9ccd4"/>
+  <text x="800.0" y="84.0" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="600" fill="#111111">Epiphan Edge</text>
+  <text x="800.0" y="103.0" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#5a5a5a">share the clip</text>
+  <path d="M115 122 L345 200" stroke="#4a4aaf" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#head)"/>
+  <text x="200" y="182" text-anchor="middle" font-size="11" fill="#5a5a5a">Dante audio</text>
+  <rect x="330" y="200" width="160" height="60" rx="8" fill="#ffffff" stroke="#c9ccd4"/>
+  <text x="410.0" y="224.0" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="600" fill="#111111">EC20 audio in</text>
+  <text x="410.0" y="243.0" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#5a5a5a">Dante, one stereo pair</text>
+  <path d="M490 230 L568 230" stroke="#4a4aaf" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#head)"/>
+  <text x="529" y="221" text-anchor="middle" font-size="11" fill="#5a5a5a">RTSP or SRT</text>
+  <rect x="570" y="200" width="150" height="60" rx="8" fill="#ffffff" stroke="#c9ccd4"/>
+  <text x="645.0" y="224.0" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="600" fill="#111111">Pearl Nano</text>
+  <text x="645.0" y="243.0" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#5a5a5a">no Dante input</text>
+  <circle cx="34" cy="296" r="5" fill="#83ce41"/>
+  <text x="46" y="301" font-size="13" fill="#111111">Solid: the voice-steer path (T1 to T3). Dashed: Dante audio to Pearl Nano (T5).</text>
+  </svg>

@@ -1,4 +1,44 @@
+# Secrets and local config. .env.example is the only env file that belongs in git.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.claude/settings.local.json
+.claude/worktrees/
+
+# Local context: names a customer and real devices, so it never leaves this machine
+.claude/context.local.md
+.claude/first-session-prompt.md
+/planning/
+
+# Bench runs and notes can hold camera addresses, room names and people
 docs/run.log
+/bench/
+*.csv
+
+# Saved Epiphan Edge tool results name real devices. Keep them in a scratchpad; tests/fixtures holds scrubbed copies
+/edge/
+*.edge.json
+
+# Python and tooling
+.venv/
 __pycache__/
 *.pyc
-.env
+.pytest_cache/
+.ruff_cache/
+.coverage
+.cache/
+dist/
+build/
+*.egg-info/
+htmlcov/
+.mypy_cache/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log
