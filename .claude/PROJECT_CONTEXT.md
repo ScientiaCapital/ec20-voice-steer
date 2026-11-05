@@ -60,7 +60,9 @@ Start here, in order:
 Before starting, read `AGENTS.md`. The short version: only the bench EC20 moves, every EC20 fact is cited from
 kb.epiphan.com, and no customer names or camera addresses go in the repo.
 
-Still open for the maintainer:
-- The first commit (2e20a8e) still names the customer and the consultant. Rewriting history would remove them.
-- Main has no branch protection, so a PR can merge before CI finishes. Roomsync-style protection would require
-  green CI and a review.
+Maintainer decisions (November 5, 2026):
+- History was rewritten so no commit names the customer or the consultant. GitHub still keeps PR #1's original
+  commits, where the names show as deleted lines. The repo is private, and that was accepted as is.
+- Main has no branch protection yet, because the free GitHub plan doesn't allow it on a private repo. Tim is moving
+  to GitHub Pro. After that, protect main: changes only through a PR, the Linux tests, lint and the secrets scan
+  must pass, and no force-push.
