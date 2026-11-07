@@ -73,6 +73,14 @@ uv run ec20-steer route            # keys 1 to 9 are zones, 0 is wide, q quits
 
 `save` overwrites a preset on the camera. `route --mic` uses a crude laptop mic level trigger instead of keys, and needs `uv sync --extra mic`. Zones and the debounce are in `src/ec20_voice_steer/zones.default.json`, and `route --config` takes your own file.
 
+To see what a ceiling array sends before it ever reaches the camera, run the laptop as a fake EC20:
+
+```bash
+uv run ec20-steer listen           # decode each VISCA packet on UDP 52381, answer like a camera
+```
+
+Point the array's camera control target at the laptop. Each packet is printed and decoded, flagged when it has no VISCA over IP header, an unrecognized message, or a sequence jump, and compared byte for byte with what `ec20-steer` sends. The listener answers only requests it recognizes, and each line says what it sent back. `listen --no-reply` decodes without answering, and `listen --port N` picks another port. `listen` reads nothing from `.env` and sends nothing to a camera. It answers any sender on the network, so run it on the bench network, from the repo root so `docs/run.log` stays gitignored.
+
 To work on the code without a camera:
 
 ```bash
@@ -109,7 +117,7 @@ To rebuild the README art after a change, run `python3 scripts/build_readme_art.
 
 ## Status
 
-Proof of concept. Built: the VISCA over IP client, the zone router with its debounce, and the key and mic stand-ins, all tested without a network. Not yet done: any run against a real EC20. Next steps: T1 on a bench EC20, then T2 with the back and forth rows, then T5.
+Proof of concept. Built: the VISCA over IP client, the zone router with its debounce, the key and mic stand-ins, and the fake EC20 listener, all tested without a network. Not yet done: any run against a real EC20. Next steps: T1 on a bench EC20, then T2 with the back and forth rows, then T5.
 
 ## License
 

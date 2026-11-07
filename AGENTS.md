@@ -22,9 +22,10 @@ uv run ec20-steer --help
 
 ## Hard rules
 
-1. **VISCA goes to a bench EC20 only.** Every `ec20-steer` command except `--help` sends UDP to one camera and can
-   move it or overwrite a preset. Run it only against a camera the maintainer named in that session, never a
-   camera in a room someone is using. `save` overwrites a preset with no undo.
+1. **VISCA goes to a bench EC20 only.** Every `ec20-steer` command except `--help` and `listen` sends UDP to one
+   camera and can move it or overwrite a preset. Run those commands only against a camera the maintainer named in
+   that session, never a camera in a room someone is using. `save` overwrites a preset with no undo. `listen` sends
+   nothing to a camera: it binds a local UDP port and replies only to whoever sent to it. Run it on the bench network.
 2. **Epiphan product facts come from the docs.** Use `kb_search` and `kb_fetch` or the Epiphan Knowledge connector,
    never memory, and cite the page id beside the claim. If a page doesn't cover it, it's a bench test or an open
    question in `docs/test-plan.md`. Third-party products (the Audio-Technica array, Dante) are cited the same way
@@ -69,6 +70,7 @@ uv run ec20-steer --help
 |---|---|
 | `src/ec20_voice_steer/visca.py` | VISCA over IP packets, reply parsing, and the async camera client |
 | `src/ec20_voice_steer/router.py` | Zone to preset mapping and the debounce |
+| `src/ec20_voice_steer/listener.py` | The fake EC20 behind `ec20-steer listen`: decodes and answers what an array sends |
 | `src/ec20_voice_steer/cli.py` | The `ec20-steer` command, with the key and mic stand-ins for the array |
 | `src/ec20_voice_steer/settings.py` | The camera address and timeout from `.env` |
 | `docs/test-plan.md` | The bench tests T1 to T5 and the open questions |

@@ -36,6 +36,19 @@ Run `uv run ec20-steer route`. Each recall is appended to `docs/run.log`, which 
 
 ## T4: A real ATND1061DAN (when one is available)
 
+Check the array against the laptop first, so nothing moves until its packets look right. The EC20 takes Sony VISCA on UDP 52381, and the port can't be changed (kb: ec20/ec20-network-settings).
+
+| Step | Expected | Result |
+|---|---|---|
+| Run `uv run ec20-steer listen` and point the array's camera control target at the laptop, port 52381 | Each zone event shows up as a decoded packet | |
+| Talk in zone 1, then zone 2 | `preset recall` lines carry the label `same bytes as ec20-steer` | |
+| Read the preset numbers | Note which byte the array's preset 1 sends, `01` or `00`. Then check on the camera, in the next part of T4, which EC20 preset that byte recalls | |
+| Watch for `!` lines | No missing header, no unrecognized message, and no sequence jumps. Note any that appear. Whether the EC20 accepts them is checked on the camera next | |
+| Leave the room quiet | Note what the array sends, if anything, for a home or default shot | |
+| Run `listen --no-reply` | Note whether the array waits for, retries without, or ignores the camera's replies | |
+
+Then move the array to the real camera:
+
 - Point the array's camera control target at the EC20's IP address, port 52381, VISCA over IP
 - Map the array's zones to presets 1–6 in A-T Digital Microphone Manager
 - Run T2 and T3 again with people talking in the room, including two people trading short lines

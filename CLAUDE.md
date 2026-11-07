@@ -48,6 +48,7 @@ part Edge can see.
 
 ## Now
 
-Proof of concept, code complete, no hardware run yet. `ec20-steer version | save | recall | home | route` exist and
-are tested only with a fake transport. The next person starts with "Where to pick up" in
-`.claude/PROJECT_CONTEXT.md`: bench setup, then T1, T2 and T3 in `docs/test-plan.md`.
+Proof of concept, code complete, no hardware run yet. `ec20-steer version | save | recall | home | route | listen`
+exist and are tested only with a fake transport. `listen` plays the camera so a real array can be checked first.
+The next person starts with "Where to pick up" in `.claude/PROJECT_CONTEXT.md`: bench setup, then T1, T2 and T3 in
+`docs/test-plan.md`.
