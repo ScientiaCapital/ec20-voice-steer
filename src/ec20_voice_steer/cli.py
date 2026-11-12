@@ -44,7 +44,12 @@ def build_parser() -> argparse.ArgumentParser:
     route.add_argument("--mic", action="store_true", help="laptop mic level trigger instead of keys (needs [mic])")
     route.add_argument("--threshold", type=float, default=0.05, help="mic RMS above this is zone 1, else zone 2")
     listen = sub.add_parser("listen", help="play the camera: decode VISCA a sender (such as an array) sends here")
-    listen.add_argument("--bind", default="0.0.0.0", help="local address to listen on (default: all interfaces)")
+    listen.add_argument(
+        "--bind",
+        default="127.0.0.1",
+        help="local address to listen on (default: 127.0.0.1, this machine only). To hear an array on the "
+        "network, pass this machine's bench network address, or 0.0.0.0 for every interface",
+    )
     listen.add_argument(
         "--port", dest="listen_port", type=int, help="UDP port to listen on (default 52381; .env isn't read)"
     )

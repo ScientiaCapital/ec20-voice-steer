@@ -398,7 +398,21 @@ def record_serve(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
 def test_listen_defaults_need_no_camera_address(monkeypatch: pytest.MonkeyPatch) -> None:
     called = record_serve(monkeypatch)
     assert cli.main(["listen", "--no-reply"]) == 0
-    assert called == {"bind": "0.0.0.0", "port": 52381, "reply": False, "log_path": Path("docs/run.log")}
+    assert called == {"bind": "127.0.0.1", "port": 52381, "reply": False, "log_path": Path("docs/run.log")}
+
+
+def test_listen_help_says_lan_needs_an_explicit_bind(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        cli.main(["listen", "--help"])
+    out = " ".join(capsys.readouterr().out.split())
+    assert "default: 127.0.0.1" in out
+    assert "all interfaces" not in out
+
+
+def test_listen_lan_exposure_takes_an_explicit_bind(monkeypatch: pytest.MonkeyPatch) -> None:
+    called = record_serve(monkeypatch)
+    assert cli.main(["listen", "--bind", "0.0.0.0"]) == 0
+    assert called["bind"] == "0.0.0.0"
 
 
 @pytest.mark.parametrize(

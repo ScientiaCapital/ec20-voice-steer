@@ -40,7 +40,7 @@ Check the array against the laptop first, so nothing moves until its packets loo
 
 | Step | Expected | Result |
 |---|---|---|
-| Run `uv run ec20-steer listen` and point the array's camera control target at the laptop, port 52381 | Each zone event shows up as a decoded packet | |
+| Run `uv run ec20-steer listen --bind` with the laptop's bench network address (it binds 127.0.0.1 without one) and point the array's camera control target at that address, port 52381 | Each zone event shows up as a decoded packet | |
 | Talk in zone 1, then zone 2 | `preset recall` lines carry the label `same bytes as ec20-steer` | |
 | Read the preset numbers | Note which byte the array's preset 1 sends, `01` or `00`. Then check on the camera, in the next part of T4, which EC20 preset that byte recalls | |
 | Watch for `!` lines | No missing header, no unrecognized message, and no sequence jumps. Note any that appear. Whether the EC20 accepts them is checked on the camera next | |
