@@ -3,12 +3,12 @@
 ec20-voice-steer sends VISCA over IP commands that move a PTZ camera and can overwrite its presets. Claude Code
 sessions in this folder can also read Epiphan devices through Epiphan Edge. A bug that moves the wrong camera,
 changes a device without approval, or puts a camera address or a customer name into git matters. This repository is
-private for now.
+public, so report a problem privately as below, not in a public issue.
 
 ## Report a problem
 
-Email tkipper@epiphan.com, or tell the maintainer directly. Don't put a camera address, a stream key or device
-details in an issue or a PR.
+Use GitHub private vulnerability reporting (the Security tab of this repository), or email tkipper@gmail.com.
+Don't put a camera address, a stream key or device details in an issue or a PR.
 
 Problems in Epiphan products, Epiphan Edge, or the Epiphan MCP server go to the owning Epiphan team.
 
