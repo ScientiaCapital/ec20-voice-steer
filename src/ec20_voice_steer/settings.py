@@ -1,5 +1,7 @@
 """The one place ec20-voice-steer reads configuration. Values come from EC20_STEER_* variables or `.env`."""
 
+import ipaddress
+
 from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -39,3 +41,32 @@ def load_settings() -> Settings:
             variables.append(ENV_PREFIX + field.upper())
             reasons.append(error["msg"])
         raise SettingsError(variables, reasons) from None
+
+
+class TargetError(Exception):
+    """The camera address can't be used. The message names the setting, never the address."""
+
+
+LIMITED_BROADCAST = ipaddress.IPv4Address("255.255.255.255")
+TARGET = "the camera address (--ip or EC20_STEER_IP)"
+
+
+def check_target(address: str, allow_public: bool = False) -> str:
+    """Refuse an address that isn't one unicast camera, and a public one unless `allow_public` is set.
+
+    Multicast, broadcast and unspecified addresses are refused outright. Directed subnet broadcasts can't be told
+    apart from a host address without the netmask, so they aren't caught here.
+    """
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        raise TargetError(f"{TARGET} is not an IP address") from None
+    if ip.is_multicast:
+        raise TargetError(f"{TARGET} is a multicast address; VISCA goes to one camera")
+    if ip == LIMITED_BROADCAST:
+        raise TargetError(f"{TARGET} is the broadcast address; VISCA goes to one camera")
+    if ip.is_unspecified:
+        raise TargetError(f"{TARGET} is the unspecified address; VISCA goes to one camera")
+    if not ip.is_private and not allow_public:
+        raise TargetError(f"{TARGET} is a public address; pass --allow-public if the bench EC20 really is there")
+    return address

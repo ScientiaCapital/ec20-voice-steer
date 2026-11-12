@@ -15,7 +15,7 @@ from pathlib import Path
 from ec20_voice_steer import __version__
 from ec20_voice_steer.listener import ListenError, serve
 from ec20_voice_steer.router import WIDE, Router, load_zone_config
-from ec20_voice_steer.settings import SettingsError, load_settings
+from ec20_voice_steer.settings import SettingsError, TargetError, check_target, load_settings
 from ec20_voice_steer.visca import MAX_PRESET, PORT, ReplyKind, ViscaIP, parse_reply
 
 
@@ -31,6 +31,11 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--ip", help="EC20 address (default: EC20_STEER_IP from .env)")
     ap.add_argument("--port", type=int, help="VISCA over IP port (the EC20 uses 52381)")
     ap.add_argument("--timeout", type=float, help="seconds to wait for a reply")
+    ap.add_argument(
+        "--allow-public",
+        action="store_true",
+        help="allow a public (non-private) camera address; multicast and broadcast are always refused",
+    )
     ap.add_argument("-V", "--package-version", action="version", version=f"ec20-voice-steer {__version__}")
     sub = ap.add_subparsers(dest="command", required=True)
     sub.add_parser("version", help="send the VISCA version inquiry (a safe first check)")
@@ -136,6 +141,11 @@ async def _main(args: argparse.Namespace) -> int:
     ip = args.ip or settings.ip
     if not ip:
         print("no camera address: pass --ip or set EC20_STEER_IP in .env", file=sys.stderr)
+        return 2
+    try:
+        check_target(ip, args.allow_public)
+    except TargetError as exc:
+        print(exc, file=sys.stderr)
         return 2
     cam = await ViscaIP.open(ip, args.port or settings.port, args.timeout or settings.timeout_s)
     try:
