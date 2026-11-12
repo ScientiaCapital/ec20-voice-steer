@@ -67,7 +67,7 @@ async def test_reset_then_recall_on_the_wire() -> None:
 
 
 async def test_sequence_increments_per_command() -> None:
-    cam, wire = fake_camera([ACK, ACK, DONE])
+    cam, wire = fake_camera([ACK, build_packet(0x0111, ACK[8:], 2), build_packet(0x0111, DONE[8:], 3)])
     await cam.save(1)
     await cam.recall(1)
     await cam.inquiry_version()
@@ -78,3 +78,40 @@ async def test_sequence_increments_per_command() -> None:
 async def test_timeout_is_reported_not_raised() -> None:
     cam, _ = fake_camera([None])
     assert (await cam.home()).kind is ReplyKind.TIMEOUT
+
+
+def reply_for(seq: int, body: bytes = bytes.fromhex("9041ff")) -> bytes:
+    return build_packet(0x0111, body, seq)
+
+
+async def test_a_reply_with_another_sequence_number_is_dropped() -> None:
+    stale = reply_for(7)
+    cam, _ = fake_camera([stale])
+    reply = await cam.recall(1)
+    assert reply.kind is ReplyKind.TIMEOUT
+    assert cam.mismatched == 1
+
+
+async def test_a_stale_reply_is_skipped_and_the_matching_one_is_used() -> None:
+    cam, wire = fake_camera()
+    wire._inbox.put_nowait(reply_for(9))  # a late reply to an earlier request
+    wire._inbox.put_nowait(reply_for(1, bytes.fromhex("9051ff")))
+    reply = await cam.recall(2)
+    assert reply.kind is ReplyKind.COMPLETION
+    assert reply.raw == reply_for(1, bytes.fromhex("9051ff"))
+    assert cam.mismatched == 1
+
+
+async def test_a_reply_too_short_for_a_header_is_dropped() -> None:
+    cam, _ = fake_camera([bytes.fromhex("9041ff")])
+    assert (await cam.home()).kind is ReplyKind.TIMEOUT
+    assert cam.mismatched == 1
+
+
+async def test_receive_for_a_sequence_drops_others() -> None:
+    cam, wire = fake_camera([reply_for(1)])
+    await cam.recall(1)
+    wire._inbox.put_nowait(reply_for(5, bytes.fromhex("9051ff")))
+    assert await cam.receive(seq=cam.seq) is None
+    wire._inbox.put_nowait(reply_for(1, bytes.fromhex("9051ff")))
+    assert await cam.receive(seq=cam.seq) == reply_for(1, bytes.fromhex("9051ff"))

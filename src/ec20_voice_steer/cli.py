@@ -82,7 +82,7 @@ async def _one_shot(cam: ViscaIP, command: str, preset: int | None) -> int:
     else:
         reply = await cam.inquiry_version()
     print(f"{reply}  ({(time.monotonic() - started) * 1000:.0f} ms)")
-    extra = await cam.receive()
+    extra = await cam.receive(seq=cam.seq)
     if extra is not None:
         print(parse_reply(extra))
     return 1 if reply.kind is ReplyKind.TIMEOUT else 0
