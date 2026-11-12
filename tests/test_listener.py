@@ -11,6 +11,7 @@ from ec20_voice_steer.listener import (
     ACK_BODY,
     COMPLETION_BODY,
     CONTROL_REPLY,
+    HEX_LIMIT,
     INQUIRY_COMPLETION_BODY,
     REPLY,
     Listener,
@@ -18,6 +19,7 @@ from ec20_voice_steer.listener import (
     decode,
     describe,
     ec20_steer_match,
+    hex_preview,
     replies_for,
     serve,
 )
@@ -303,6 +305,58 @@ async def test_a_failing_log_is_reported_once_and_replies_continue(tmp_path: Pat
     assert len(wire.sent) == 4
     assert listener.log_errors == 2
     assert len(problems) == 1 and "log writes" in problems[0]
+
+
+def test_hex_preview_keeps_short_data_whole() -> None:
+    assert hex_preview(bytes(range(4))) == "00010203"
+    assert hex_preview(bytes(range(4)), " ") == "00 01 02 03"
+    assert hex_preview(bytes(HEX_LIMIT)) == "00" * HEX_LIMIT
+
+
+def test_hex_preview_truncates_and_gives_the_total_length() -> None:
+    shown = hex_preview(bytes(1000))
+    assert shown == "00" * HEX_LIMIT + " ... (1000 bytes)"
+
+
+async def test_a_big_packet_is_truncated_in_print_and_log(tmp_path: Path) -> None:
+    log = tmp_path / "run.log"
+    listener, _, lines, _ = make_listener(log_path=log)
+    big = build_packet(CMD, b"\xab" * 2000, 1)
+    listener.datagram_received(big, SENDER)
+    await drain_log(listener)
+    text = log.read_text()
+    assert "ab" * (HEX_LIMIT + 1) not in text
+    assert "ab " * (HEX_LIMIT + 1) not in lines[0]
+    assert f"({len(big)} bytes)" in text
+    assert "(2000 bytes)" in lines[0] and "(2000 bytes)" in text
+
+
+def test_a_big_packet_is_truncated_in_the_error_report() -> None:
+    problems: list[str] = []
+
+    def broken_echo(line: str) -> None:
+        raise BrokenPipeError("stdout closed")
+
+    listener = Listener(echo=broken_echo, report=problems.append)
+    big = b"\xcd" * 5000
+    listener.datagram_received(big, SENDER)
+    assert "cd" * (HEX_LIMIT + 1) not in problems[0]
+    assert "(5000 bytes)" in problems[0]
+
+
+def test_a_full_log_queue_drops_and_counts(tmp_path: Path) -> None:
+    problems: list[str] = []
+    listener = Listener(log_path=tmp_path / "run.log", echo=lambda _: None, report=problems.append, log_queue_size=2)
+    for seq in range(5):
+        listener.datagram_received(build_packet(CMD, recall_message(1), seq), SENDER)
+    assert listener.log_queue.qsize() == 2
+    assert listener.log_dropped == 3
+    assert len(problems) == 1 and "log queue is full" in problems[0]
+    assert "3 log lines dropped" in listener.summary()
+
+
+def test_the_log_queue_is_bounded_by_default() -> None:
+    assert Listener().log_queue.maxsize > 0
 
 
 # serve, with the socket faked

@@ -37,6 +37,10 @@ INQUIRY_COMPLETION_BODY = bytes([0x90, 0x50, 0xFF])
 """In VISCA an inquiry completion carries data. This fake one sends an empty completion."""
 NOT_RECOGNIZED = "not recognized"
 SEQ_MASK = 0xFFFFFFFF
+HEX_LIMIT = 64
+"""Bytes of a packet shown as hex in a printed line, log line or error report. Longer packets are cut short."""
+LOG_QUEUE_MAX = 1000
+"""Log lines waiting for the writer. Past this, new lines are dropped and counted, so a flood can't grow memory."""
 
 
 def say(line: str) -> None:
@@ -46,6 +50,13 @@ def say(line: str) -> None:
 
 def warn(line: str) -> None:
     print(line, file=sys.stderr, flush=True)
+
+
+def hex_preview(data: bytes, sep: str = "") -> str:
+    """Hex of the first HEX_LIMIT bytes, and the total length when the rest is cut off."""
+    head = data[:HEX_LIMIT]
+    shown = head.hex(sep) if sep else head.hex()
+    return shown if len(data) <= HEX_LIMIT else f"{shown} ... ({len(data)} bytes)"
 
 
 class ListenError(Exception):
@@ -204,13 +215,14 @@ class Listener(asyncio.DatagramProtocol):
         echo: Callable[[str], None] = say,
         clock: Callable[[], float] = time.time,
         report: Callable[[str], None] = warn,
+        log_queue_size: int = LOG_QUEUE_MAX,
     ) -> None:
         self.reply, self.log_path, self.echo, self.clock, self.report = reply, log_path, echo, clock, report
         self.transport: asyncio.DatagramTransport | None = None
         self.sequence = SequenceWatch()
-        self.log_queue: asyncio.Queue[str] = asyncio.Queue()
+        self.log_queue: asyncio.Queue[str] = asyncio.Queue(maxsize=log_queue_size)
         self.done: asyncio.Future[None] | None = None
-        self.count = self.replies_sent = self.socket_errors = self.log_errors = 0
+        self.count = self.replies_sent = self.socket_errors = self.log_errors = self.log_dropped = 0
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self.transport = transport  # type: ignore[assignment]
@@ -230,7 +242,7 @@ class Listener(asyncio.DatagramProtocol):
         try:
             self._handle(data, addr)
         except Exception as exc:  # keep listening, but say exactly which packet broke what
-            self.report(f"listen: failed on packet from {addr[0]}:{addr[1]} ({data.hex()}): {exc!r}")
+            self.report(f"listen: failed on packet from {addr[0]}:{addr[1]} ({hex_preview(data)}): {exc!r}")
 
     def _send_replies(self, d: Decoded, addr: tuple[str, int]) -> str:
         if not self.reply:
@@ -256,7 +268,7 @@ class Listener(asyncio.DatagramProtocol):
         match = ec20_steer_match(d)
         now = self.clock()
         seq = "-" if d.seq is None else str(d.seq)
-        line = f"#{self.count}  {d.framing}  {d.type_name}  seq {seq}  {d.body.hex(' ')}  -> {d.meaning}"
+        line = f"#{self.count}  {d.framing}  {d.type_name}  seq {seq}  {hex_preview(d.body, ' ')}  -> {d.meaning}"
         if match:
             line += f"  [{match}]"
         line += f"  reply: {sent}"
@@ -267,7 +279,16 @@ class Listener(asyncio.DatagramProtocol):
         if self.log_path is not None:
             stamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(now)) + f".{int(now % 1 * 1000):03d}"
             noted = "".join(f"  ! {n}" for n in notes)
-            self.log_queue.put_nowait(f"{stamp}  listen from {addr[0]}:{addr[1]}  raw {data.hex()}  {line}{noted}")
+            self._queue_log(f"{stamp}  listen from {addr[0]}:{addr[1]}  raw {hex_preview(data)}  {line}{noted}")
+
+    def _queue_log(self, line: str) -> None:
+        """Queue a log line, or drop and count it when the writer is behind. The first drop is reported."""
+        try:
+            self.log_queue.put_nowait(line)
+        except asyncio.QueueFull:
+            self.log_dropped += 1
+            if self.log_dropped == 1:
+                self.report(f"listen: log queue is full ({self.log_queue.maxsize} lines); dropping log lines")
 
     async def write_log(self) -> None:
         """Write queued log lines in order, off the event loop. A failing log is reported once, then counted."""
@@ -288,7 +309,7 @@ class Listener(asyncio.DatagramProtocol):
     def summary(self) -> str:
         return (
             f"{self.count} packets, {self.replies_sent} replies sent, "
-            f"{self.socket_errors} socket errors, {self.log_errors} log errors"
+            f"{self.socket_errors} socket errors, {self.log_errors} log errors, {self.log_dropped} log lines dropped"
         )
 
 
