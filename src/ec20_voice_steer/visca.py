@@ -106,6 +106,8 @@ class ViscaIP:
         self._inbox = inbox
         self.timeout_s = timeout_s
         self.seq = 0
+        self.mismatched = 0
+        """Replies dropped because their sequence number wasn't the one being waited for."""
 
     @classmethod
     async def open(cls, ip: str, port: int = PORT, timeout_s: float = 1.0) -> "ViscaIP":
@@ -118,16 +120,24 @@ class ViscaIP:
     def close(self) -> None:
         self._transport.close()
 
-    async def receive(self, timeout_s: float | None = None) -> bytes | None:
-        try:
-            return await asyncio.wait_for(self._inbox.get(), timeout_s if timeout_s is not None else self.timeout_s)
-        except TimeoutError:
-            return None
+    async def receive(self, timeout_s: float | None = None, seq: int | None = None) -> bytes | None:
+        """The next reply, or None on timeout. With `seq`, replies carrying another sequence number (or too short
+        to carry one) are dropped and counted in `mismatched`, and the wait continues until the same deadline."""
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + (timeout_s if timeout_s is not None else self.timeout_s)
+        while True:
+            try:
+                data = await asyncio.wait_for(self._inbox.get(), max(deadline - loop.time(), 0))
+            except TimeoutError:
+                return None
+            if seq is None or (len(data) >= HEADER.size and HEADER.unpack_from(data)[2] == seq):
+                return data
+            self.mismatched += 1
 
     async def _send(self, payload_type: int, payload: bytes) -> Reply:
         self.seq = (self.seq + 1) & 0xFFFFFFFF
         self._transport.sendto(build_packet(payload_type, payload, self.seq))
-        return parse_reply(await self.receive())
+        return parse_reply(await self.receive(seq=self.seq))
 
     async def reset_sequence(self) -> None:
         """Ask the camera to reset its sequence counter. A missing reply is not an error here."""

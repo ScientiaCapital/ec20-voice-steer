@@ -81,6 +81,8 @@ uv run ec20-steer listen           # decode each VISCA packet on UDP 52381, answ
 
 Point the array's camera control target at the laptop. Each packet is printed and decoded, flagged when it has no VISCA over IP header, an unrecognized message, or a sequence jump, and compared byte for byte with what `ec20-steer` sends. The listener answers only requests it recognizes, and each line says what it sent back. `listen --no-reply` decodes without answering, and `listen --port N` picks another port. `listen` reads nothing from `.env` and sends nothing to a camera. By default it binds 127.0.0.1, so only this machine can reach it. To hear an array, pass `listen --bind` with the laptop's bench network address (or `0.0.0.0` for every interface). It then answers any sender that can reach that address, so run it on the bench network, from the repo root so `docs/run.log` stays gitignored.
 
+The camera address must be one IP address, not a host name. Multicast, broadcast and unspecified addresses are refused. A public (non-private) address is refused unless you pass `--allow-public`. Each reply is matched to its request by sequence number, and a reply with another number is dropped.
+
 To work on the code without a camera:
 
 ```bash
