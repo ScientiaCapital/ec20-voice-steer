@@ -16,6 +16,7 @@ from ec20_voice_steer.listener import (
     REPLY,
     Listener,
     ListenError,
+    SequenceWatch,
     decode,
     describe,
     ec20_steer_match,
@@ -248,6 +249,24 @@ def test_sequences_are_tracked_per_sender() -> None:
     for sender, seq in ((SENDER, 1), (OTHER_SENDER, 10), (SENDER, 2), (OTHER_SENDER, 11), (SENDER, 3)):
         listener.datagram_received(build_packet(CMD, recall_message(1), seq), sender)
     assert not any("!" in line for line in lines)
+
+
+def test_sequence_watch_is_capped_against_spoofed_ports() -> None:
+    watch = SequenceWatch()
+    for port in range(10_000):
+        watch.check((FAKE_IP, port), decode(build_packet(CMD, recall_message(1), 1)))
+    assert len(watch.last) == SequenceWatch.MAX_SENDERS
+
+
+def test_sequence_watch_forgets_the_least_recently_seen_sender() -> None:
+    watch = SequenceWatch(max_senders=2)
+    a, b, c = (FAKE_IP, 1), (FAKE_IP, 2), (FAKE_IP, 3)
+    watch.check(a, decode(build_packet(CMD, recall_message(1), 1)))
+    watch.check(b, decode(build_packet(CMD, recall_message(1), 1)))
+    watch.check(a, decode(build_packet(CMD, recall_message(1), 2)))  # a is now the most recent
+    watch.check(c, decode(build_packet(CMD, recall_message(1), 1)))  # evicts b
+    assert list(watch.last) == [a, c]
+    assert watch.check(a, decode(build_packet(CMD, recall_message(1), 3))) is None
 
 
 def test_reset_restarts_the_sequence_watch() -> None:

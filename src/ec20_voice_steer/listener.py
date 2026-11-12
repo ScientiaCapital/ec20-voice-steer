@@ -10,9 +10,11 @@ import asyncio
 import contextlib
 import sys
 import time
+from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import ClassVar
 
 from ec20_voice_steer.visca import (
     CMD,
@@ -177,18 +179,30 @@ def replies_for(d: Decoded) -> list[bytes]:
 
 @dataclass
 class SequenceWatch:
-    """Track each sender's sequence numbers. A receiver may reject a sender whose numbers jump or repeat."""
+    """Track each sender's sequence numbers. A receiver may reject a sender whose numbers jump or repeat.
 
-    last: dict[tuple[str, int], int] = field(default_factory=dict)
+    At most `max_senders` senders are kept. The least recently seen one is forgotten first, so packets from
+    spoofed source ports can't grow it without limit.
+    """
+
+    MAX_SENDERS: ClassVar[int] = 256
+    max_senders: int = MAX_SENDERS
+    last: OrderedDict[tuple[str, int], int] = field(default_factory=OrderedDict)
+
+    def _remember(self, sender: tuple[str, int], seq: int) -> None:
+        self.last[sender] = seq
+        self.last.move_to_end(sender)
+        while len(self.last) > self.max_senders:
+            self.last.popitem(last=False)
 
     def check(self, sender: tuple[str, int], d: Decoded) -> str | None:
         if d.seq is None or d.payload_type in (REPLY, CONTROL_REPLY):
             return None
         if d.payload_type == CONTROL:
-            self.last[sender] = d.seq
+            self._remember(sender, d.seq)
             return None
         previous = self.last.get(sender)
-        self.last[sender] = d.seq
+        self._remember(sender, d.seq)
         if previous is None or d.seq == (previous + 1) & SEQ_MASK:
             return None
         if d.seq == previous:
