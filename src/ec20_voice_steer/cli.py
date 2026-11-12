@@ -1,6 +1,8 @@
-"""Command line: `ec20-steer version | save N | recall N | home | route [--mic]`.
+"""Command line: `ec20-steer version | save N | recall N | home | route [--mic] | listen`.
 
-Every command sends VISCA over IP to one camera address. Use a bench EC20 only.
+Every command except `listen` sends VISCA over IP to one camera address. Use a bench EC20 only. `listen` plays
+the camera instead: it binds a local UDP port, decodes what a sender such as a ceiling array sends, and never
+contacts a camera.
 """
 
 import argparse
@@ -11,9 +13,10 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from ec20_voice_steer import __version__
+from ec20_voice_steer.listener import ListenError, serve
 from ec20_voice_steer.router import WIDE, Router, load_zone_config
 from ec20_voice_steer.settings import SettingsError, load_settings
-from ec20_voice_steer.visca import MAX_PRESET, ReplyKind, ViscaIP, parse_reply
+from ec20_voice_steer.visca import MAX_PRESET, PORT, ReplyKind, ViscaIP, parse_reply
 
 
 def _preset(value: str) -> int:
@@ -40,7 +43,32 @@ def build_parser() -> argparse.ArgumentParser:
     route.add_argument("--log", type=Path, default=Path("docs/run.log"), help="append each recall here")
     route.add_argument("--mic", action="store_true", help="laptop mic level trigger instead of keys (needs [mic])")
     route.add_argument("--threshold", type=float, default=0.05, help="mic RMS above this is zone 1, else zone 2")
+    listen = sub.add_parser("listen", help="play the camera: decode VISCA a sender (such as an array) sends here")
+    listen.add_argument(
+        "--bind",
+        default="127.0.0.1",
+        help="local address to listen on (default: 127.0.0.1, this machine only). To hear an array on the "
+        "network, pass this machine's bench network address, or 0.0.0.0 for every interface",
+    )
+    listen.add_argument(
+        "--port", dest="listen_port", type=int, help="UDP port to listen on (default 52381; .env isn't read)"
+    )
+    listen.add_argument("--no-reply", action="store_true", help="decode only, don't answer with ACK and completion")
+    listen.add_argument("--log", type=Path, default=Path("docs/run.log"), help="append each packet here")
     return ap
+
+
+async def _listen(args: argparse.Namespace) -> int:
+    """`listen` reads no settings: it plays the camera, so there is no camera address or port to look up."""
+    if args.ip or args.timeout:
+        print("listen ignores --ip and --timeout: it contacts no camera", file=sys.stderr)
+    port = next((p for p in (args.listen_port, args.port) if p is not None), PORT)
+    try:
+        await serve(args.bind, port, reply=not args.no_reply, log_path=args.log)
+    except ListenError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    return 0
 
 
 async def _one_shot(cam: ViscaIP, command: str, preset: int | None) -> int:
@@ -102,6 +130,8 @@ async def _run_mic(router: Router, threshold: float) -> None:
 
 
 async def _main(args: argparse.Namespace) -> int:
+    if args.command == "listen":
+        return await _listen(args)
     settings = load_settings()
     ip = args.ip or settings.ip
     if not ip:
